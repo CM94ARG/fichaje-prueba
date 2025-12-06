@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prueba Fichaje</title>
+</head>
+<body>
+    <h2>Prueba de Fichaje</h2>
+    
+    <div>
+        <input type="text" id="dni" placeholder="DNI (ej: 35286339)" value="35286339">
+    </div>
+    
+    <div>
+        <button onclick="enviarPrueba()">📤 ENVIAR PRUEBA</button>
+    </div>
+    
+    <div id="resultado" style="margin-top:20px; padding:10px; border:1px solid #ccc;"></div>
+
+    <script>
+        // PEGÁ TU URL AQUÍ ↓
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyQVKHBWJRI42wGyPEL5sy5w6NcVKGCVHWT6HqPSTq_pK4RmPb_hPjXRqwEeFQSBr8I/exec";
+        
+        function mostrar(mensaje) {
+            document.getElementById('resultado').innerHTML = mensaje;
+        }
+        
+        function enviarPrueba() {
+            mostrar("Enviando prueba...");
+            
+            // Datos de prueba
+            var datos = {
+                dni: document.getElementById('dni').value,
+                tipo: "entrada",
+                local: "lacroze"
+            };
+            
+            // Método alternativo que evita CORS
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', URL_SCRIPT, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        var respuesta = JSON.parse(xhr.responseText);
+                        mostrar("✅ ÉXITO:<br>" + JSON.stringify(respuesta, null, 2));
+                    } catch (e) {
+                        mostrar("RESPUESTA (texto):<br>" + xhr.responseText);
+                    }
+                } else {
+                    mostrar("❌ Error HTTP: " + xhr.status);
+                }
+            };
+            
+            xhr.onerror = function() {
+                mostrar("❌ Error de conexión. Intentá abrir el HTML desde un servidor web.");
+            };
+            
+            xhr.send(JSON.stringify(datos));
+        }
+    </script>
+</body>
+</html>
