@@ -6,18 +6,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            /* PALETA DANIEL: Gris, Blanco, Rosa */
-            --primary: #666666;      /* Gris oscuro elegante */
-            --secondary: #FF66A8;    /* Rosa Daniel */
-            --secondary-light: #FF99C2; /* Rosa claro */
-            --accent: #FF3366;       /* Rosa fuerte para salida */
-            --light: #FFFFFF;        /* Blanco puro */
-            --light-gray: #F8F8F8;   /* Gris muy claro */
-            --medium-gray: #E0E0E0;  /* Gris medio */
-            --dark: #333333;         /* Negro suave */
-            --success: #4CAF50;      /* Verde suave */
-            --warning: #FF9800;      /* Naranja */
-            --danger: #FF5252;       /* Rojo suave */
+            
+            --primary: #666666;      
+            --secondary: #FF66A8;   
+            --secondary-light: #FF99C2; 
+            --accent: #FF3366;      
+            --light: #FFFFFF;        
+            --light-gray: #F8F8F8;   
+            --medium-gray: #E0E0E0;  
+            --dark: #333333;        
+            --success: #4CAF50;      
+            --warning: #FF9800;      
+            --danger: #FF5252;       
             --shadow: rgba(0, 0, 0, 0.1);
         }
         
@@ -455,7 +455,6 @@
             margin-bottom: 5px;
         }
         
-        /* RESPONSIVE */
         @media (max-width: 600px) {
             .container {
                 border-radius: 20px;
@@ -512,15 +511,12 @@
 </head>
 <body>
     <div class="container">
-        <!-- ENCABEZADO -->
         <div class="header">
             <h1>HELADERÍAS DANIEL</h1>
             <p class="subtitle">Sistema de Control de Asistencia</p>
         </div>
         
-        <!-- CONTENIDO PRINCIPAL -->
         <div class="content">
-            <!-- LOGO -->
             <div class="logo">
                 <div class="logo-icon">
                     <i class="fas fa-clock"></i>
@@ -529,7 +525,7 @@
                 <p>Registro de entradas y salidas</p>
             </div>
             
-            <!-- PANTALLA 1: SELECCIÓN DE LOCAL -->
+            
             <div id="screen-home" class="screen active">
                 <h3 class="screen-title">Seleccioná tu local</h3>
                 
@@ -565,7 +561,6 @@
                     </button>
                 </div>
                 
-                <!-- SECCIÓN DE SALIDA CON DISEÑO DIFERENCIADO -->
                 <div class="salida-section">
                     <button class="local-btn salida-btn" onclick="selectSalida()">
                         <div class="icon">
@@ -579,7 +574,6 @@
                 </div>
             </div>
             
-            <!-- PANTALLA 2: INGRESO DE DNI -->
             <div id="screen-dni" class="screen">
                 <div class="local-info-card" id="local-info">
                     <h3>Fichaje de <span id="fichaje-type">ENTRADA</span></h3>
@@ -608,10 +602,8 @@
                 </button>
             </div>
             
-            <!-- MENSAJES -->
             <div id="message" class="message"></div>
             
-            <!-- PIE DE PÁGINA -->
             <div class="footer">
                 <p>Sistema v3.2 • Auditoría completa en registros</p>
                 <p>Todos los fichajes registran información detallada</p>
@@ -620,9 +612,7 @@
     </div>
 
     <script>
-        // ============================================
-        // FUNCIÓN PARA DETECTAR DISPOSITIVO (ENVIAMOS AL SERVER PERO NO MOSTRAMOS)
-        // ============================================
+       
         
         function detectDeviceInfo() {
             const userAgent = navigator.userAgent;
@@ -637,7 +627,7 @@
                 cookies: navigator.cookieEnabled ? 'Sí' : 'No'
             };
             
-            // DETECTAR DISPOSITIVO
+         
             if (/mobile/i.test(userAgent)) {
                 deviceInfo.tipo = 'Celular';
                 if (/samsung/i.test(userAgent)) deviceInfo.marca = 'Samsung';
@@ -657,14 +647,13 @@
                 deviceInfo.marca = screen.width < 1440 ? 'Laptop' : 'PC Escritorio';
             }
             
-            // DETECTAR NAVEGADOR
+         
             if (/chrome/i.test(userAgent) && !/edg/i.test(userAgent)) deviceInfo.navegador = 'Chrome';
             else if (/firefox/i.test(userAgent)) deviceInfo.navegador = 'Firefox';
             else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) deviceInfo.navegador = 'Safari';
             else if (/edg/i.test(userAgent)) deviceInfo.navegador = 'Edge';
             else deviceInfo.navegador = 'Otro';
             
-            // DETECTAR SISTEMA OPERATIVO
             if (/windows/i.test(userAgent)) {
                 if (/windows nt 10/i.test(userAgent)) deviceInfo.sistemaOperativo = 'Windows 10/11';
                 else deviceInfo.sistemaOperativo = 'Windows';
@@ -681,9 +670,7 @@
             return deviceInfo;
         }
         
-        // ============================================
-        // OBTENER IP PÚBLICA (SOLO PARA ENVIAR, NO MOSTRAR)
-        // ============================================
+      
         
         async function obtenerIP() {
             try {
@@ -695,21 +682,15 @@
             }
         }
         
-        // ============================================
-        // CONFIGURACIÓN
-        // ============================================
+    
         
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQVKHBWJRI42wGyPEL5sy5w6NcVKGCVHWT6HqPSTq_pK4RmPb_hPjXRqwEeFQSBr8I/exec";
         
-        // ============================================
-        // VARIABLES GLOBALES
-        // ============================================
+      
         let currentLocal = '';
         let currentType = 'entrada';
         
-        // ============================================
-        // FUNCIONES DE NAVEGACIÓN
-        // ============================================
+       
         
         function selectLocal(local) {
             currentLocal = local;
@@ -769,10 +750,7 @@
             document.getElementById(screenId).classList.add('active');
         }
         
-        // ============================================
-        // FUNCIÓN PRINCIPAL - ENVIAR FICHAJE
-        // ============================================
-        
+      
         async function submitFichaje() {
             const dni = document.getElementById('dni-input').value.trim();
             
@@ -787,22 +765,18 @@
             
             showMessage('Procesando tu fichaje, por favor espera...', 'loading');
             
-            // OBTENER TODOS LOS DATOS DE AUDITORÍA (pero NO los mostramos)
             const deviceInfo = detectDeviceInfo();
             const fechaHora = new Date().toLocaleString('es-AR', {
                 timeZone: 'America/Argentina/Buenos_Aires'
             });
             const userIP = await obtenerIP();
             
-            // Preparar datos para enviar
             const formData = new FormData();
             
-            // DATOS PRINCIPALES (igual que antes)
             formData.append('dni', dni);
             formData.append('tipo', currentType);
             formData.append('local', currentLocal);
             
-            // DATOS DE AUDITORÍA (NUEVOS - van directo al spreadsheet)
             formData.append('dispositivo_tipo', deviceInfo.tipo);
             formData.append('dispositivo_marca', deviceInfo.marca);
             formData.append('navegador', deviceInfo.navegador);
@@ -814,7 +788,6 @@
             formData.append('fecha_hora_completa', fechaHora);
             formData.append('cookies', deviceInfo.cookies);
             
-            // Enviar al script de Google
             fetch(SCRIPT_URL, {
                 method: 'POST',
                 body: formData
@@ -827,7 +800,6 @@
             })
             .then(data => {
                 if (data.success) {
-                    // MOSTRAMOS SOLO LO ESENCIAL (como antes)
                     let message = `✅ <strong>${data.message}</strong><br><small>Hora: ${data.hora}</small>`;
                     
                     if (data.horas) {
@@ -836,7 +808,6 @@
                     
                     showMessage(message, 'success');
                     
-                    // Esperar 4 segundos y volver al inicio
                     setTimeout(() => {
                         goBack();
                         submitBtn.disabled = false;
@@ -857,9 +828,7 @@
             });
         }
         
-        // ============================================
-        // FUNCIONES DE MENSAJES
-        // ============================================
+     
         
         function showMessage(text, type) {
             const messageDiv = document.getElementById('message');
@@ -873,9 +842,7 @@
             messageDiv.innerHTML = '';
         }
         
-        // ============================================
-        // EVENTOS
-        // ============================================
+      
         
         document.getElementById('dni-input').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
@@ -889,3 +856,4 @@
     </script>
 </body>
 </html>
+
