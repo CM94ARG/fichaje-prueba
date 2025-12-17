@@ -612,7 +612,27 @@
     </div>
 
     <script>
-       
+
+
+        (async function validarIP() {
+    const IP_PERMITIDA = "181.169.114.42";
+
+    try {
+        const res = await fetch("https://api.ipify.org?format=json");
+        const data = await res.json();
+
+        if (data.ip !== IP_PERMITIDA) {
+            document.body.innerHTML = `
+                <div style="text-align:center; padding:40px; font-family:sans-serif;">
+                    <h2>🚫 Acceso no autorizado</h2>
+                    <p>Este sistema solo puede usarse desde la red de la heladería.</p>
+                </div>
+            `;
+        }
+    } catch (e) {
+        document.body.innerHTML = "Error al validar IP";
+    }
+})();
         
         function detectDeviceInfo() {
             const userAgent = navigator.userAgent;
@@ -856,4 +876,5 @@
     </script>
 </body>
 </html>
+
 
