@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Panel Administrativo - Heladerías Daniel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #666666;      
+            --secondary: #FF66A8;   
+            --secondary-light: #FF99C2; 
+            --accent: #FF3366;      
+            --light: #FFFFFF;        
+            --light-gray: #F8F8F8;   
+            --medium-gray: #E0E0E0;  
+            --dark: #333333;        
+            --success: #4CAF50;      
+            --warning: #FF9800;      
+            --danger: #FF5252;       
+            --shadow: rgba(0, 0, 0, 0.1);
+            --admin-blue: #2196F3;
+            --admin-blue-light: #64B5F6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--light);
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid var(--medium-gray);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #808080 100%);
+            color: white;
+            padding: 30px 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 26px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .header .subtitle {
+            font-size: 15px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .content {
+            padding: 0 25px 25px;
+        }
+        
+        .logo {
+            text-align: center;
+            padding: 25px 25px 0;
+            margin-bottom: 5px;
+        }
+        
+        .logo-icon {
+            background: linear-gradient(135deg, var(--admin-blue) 0%, var(--admin-blue-light) 100%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.3);
+        }
+        
+        .logo-icon i {
+            font-size: 32px;
+            color: white;
+        }
+        
+        .logo h2 {
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        
+        .logo p {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 400;
+            opacity: 0.8;
+        }
+        
+        .screen {
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .screen-title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--dark);
+            font-size: 18px;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 12px;
+        }
+        
+        .screen-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(to right, var(--admin-blue), var(--admin-blue-light));
+            border-radius: 2px;
+        }
+        
+        /* LOGIN STYLES */
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .input-group {
+            margin: 25px 0;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 15px;
+        }
+        
+        .input-container {
+            position: relative;
+        }
+        
+        .text-input {
+            width: 100%;
+            padding: 18px 18px 18px 55px;
+            font-size: 17px;
+            border: 2px solid var(--medium-gray);
+            border-radius: 14px;
+            transition: all 0.3s;
+            font-weight: 500;
+            background: var(--light-gray);
+            color: var(--dark);
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: var(--admin-blue);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+            background: white;
+        }
+        
+        .input-container i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--admin-blue);
+            font-size: 20px;
+        }
+        
+        .select-input {
+            width: 100%;
+            padding: 18px 18px 18px 55px;
+            font-size: 17px;
+            border: 2px solid var(--medium-gray);
+            border-radius: 14px;
+            transition: all 0.3s;
+            font-weight: 500;
+            background: var(--light-gray);
+            color: var(--dark);
+            appearance: none;
+            cursor: pointer;
+        }
+        
+        .select-input:focus {
+            outline: none;
+            border-color: var(--admin-blue);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+            background: white;
+        }
+        
+        /* EMPLOYEE CARD */
+        .employee-info-card {
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(100, 181, 246, 0.03) 100%);
+            padding: 20px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            border: 1px solid var(--medium-gray);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .employee-info-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--admin-blue), var(--admin-blue-light));
+        }
+        
+        .employee-info-card h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+        
+        .employee-details {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .detail-item {
+            flex: 1;
+            min-width: 200px;
+            margin: 5px 0;
+        }
+        
+        .detail-label {
+            font-size: 13px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        
+        .status-pending {
+            background: rgba(255, 152, 0, 0.15);
+            color: #e65100;
+        }
+        
+        .status-complete {
+            background: rgba(76, 175, 80, 0.15);
+            color: #1b5e20;
+        }
+        
+        /* DATETIME INPUTS */
+        .datetime-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .datetime-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid var(--medium-gray);
+            border-radius: 10px;
+            background: var(--light-gray);
+            color: var(--dark);
+        }
+        
+        .datetime-input:focus {
+            outline: none;
+            border-color: var(--admin-blue);
+        }
+        
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .stat-card {
+            background: var(--light-gray);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--medium-gray);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--admin-blue);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        /* BUTTONS */
+        .action-btn {
+            width: 100%;
+            padding: 17px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(to right, var(--admin-blue), var(--admin-blue-light));
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.25);
+        }
+        
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(33, 150, 243, 0.35);
+            background: linear-gradient(to right, #1976D2, #42A5F5);
+        }
+        
+        .action-btn:active:not(:disabled) {
+            transform: translateY(-1px);
+        }
+        
+        .action-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .action-btn i {
+            margin-right: 10px;
+            font-size: 17px;
+        }
+        
+        .secondary-btn {
+            background: linear-gradient(to right, var(--primary), #808080);
+            box-shadow: 0 4px 12px rgba(102, 102, 102, 0.25);
+        }
+        
+        .secondary-btn:hover:not(:disabled) {
+            background: linear-gradient(to right, #555555, #707070);
+            box-shadow: 0 8px 20px rgba(102, 102, 102, 0.35);
+        }
+        
+        .danger-btn {
+            background: linear-gradient(to right, var(--danger), #FF8A80);
+            box-shadow: 0 4px 12px rgba(255, 82, 82, 0.25);
+        }
+        
+        .danger-btn:hover:not(:disabled) {
+            background: linear-gradient(to right, #D32F2F, #EF5350);
+            box-shadow: 0 8px 20px rgba(255, 82, 82, 0.35);
+        }
+        
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* MESSAGES */
+        .message {
+            padding: 18px;
+            margin: 20px 0;
+            border-radius: 14px;
+            text-align: center;
+            font-size: 15px;
+            display: none;
+            line-height: 1.5;
+            border-left: 5px solid transparent;
+        }
+        
+        .message.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: #1b5e20;
+            border-left-color: var(--success);
+            display: block;
+        }
+        
+        .message.error {
+            background: rgba(255, 82, 82, 0.1);
+            color: #b71c1c;
+            border-left-color: var(--danger);
+            display: block;
+        }
+        
+        .message.loading {
+            background: rgba(255, 152, 0, 0.1);
+            color: #e65100;
+            border-left-color: var(--warning);
+            display: block;
+        }
+        
+        .message.info {
+            background: rgba(33, 150, 243, 0.1);
+            color: #0d47a1;
+            border-left-color: var(--admin-blue);
+            display: block;
+        }
+        
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--medium-gray);
+            color: var(--primary);
+            font-size: 12px;
+            line-height: 1.5;
+            opacity: 0.7;
+        }
+        
+        .footer p:first-child {
+            margin-bottom: 5px;
+        }
+        
+        /* TABLE STYLES (for records) */
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        
+        .records-table th {
+            background: var(--light-gray);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--medium-gray);
+        }
+        
+        .records-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .records-table tr:hover {
+            background: rgba(33, 150, 243, 0.05);
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 20px;
+                max-width: 100%;
+            }
+            
+            .header {
+                padding: 25px 20px;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+            
+            .logo {
+                padding: 20px 20px 0;
+            }
+            
+            .content {
+                padding: 0 20px 20px;
+            }
+            
+            .datetime-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .btn-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .employee-details {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            body {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .logo h2 {
+                font-size: 22px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HELADERÍAS DANIEL</h1>
+            <p class="subtitle">Panel de Administración - Sistema de Fichaje</p>
+        </div>
+        
+        <div class="content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h2>PANEL ADMINISTRATIVO</h2>
+                <p>Registro manual de fichajes olvidados</p>
+            </div>
+            
+            <!-- LOGIN SCREEN -->
+            <div id="screen-login" class="screen active">
+                <h3 class="screen-title">Acceso Administrativo</h3>
+                
+                <div class="login-form">
+                    <div class="input-group">
+                        <label class="input-label" for="admin-password">Contraseña de Administrador</label>
+                        <div class="input-container">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" 
+                                   id="admin-password" 
+                                   class="text-input" 
+                                   placeholder="Ingresa la contraseña de administración"
+                                   onkeypress="handleLoginKeypress(event)">
+                        </div>
+                    </div>
+                    
+                    <button class="action-btn" onclick="loginAdmin()">
+                        <i class="fas fa-sign-in-alt"></i> INGRESAR AL PANEL
+                    </button>
+                    
+                    <div class="message" id="login-message"></div>
+                    
+                    <div class="footer">
+                        <p>Acceso restringido al personal autorizado</p>
+                        <p>Todos los accesos quedan registrados en el sistema</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DASHBOARD SCREEN -->
+            <div id="screen-dashboard" class="screen">
+                <h3 class="screen-title">Panel de Control</h3>
+                
+                <div id="dashboard-stats" class="stats-grid">
+                    <!-- Las estadísticas se cargarán dinámicamente -->
+                </div>
+                
+                <div class="btn-group">
+                    <button class="action-btn secondary-btn" onclick="showScreen('screen-register')">
+                        <i class="fas fa-plus-circle"></i> NUEVO FICHAJE
+                    </button>
+                    <button class="action-btn secondary-btn" onclick="showScreen('screen-search')">
+                        <i class="fas fa-search"></i> BUSCAR REGISTROS
+                    </button>
+                </div>
+                
+                <button class="action-btn danger-btn" onclick="logoutAdmin()">
+                    <i class="fas fa-sign-out-alt"></i> CERRAR SESIÓN
+                </button>
+                
+                <div class="footer">
+                    <p>Sesion iniciada como: <span id="admin-session-info">Administrador</span></p>
+                    <p>Hora del servidor: <span id="server-time">--:--:--</span></p>
+                </div>
+            </div>
+            
+            <!-- REGISTER FICHAJE SCREEN -->
+            <div id="screen-register" class="screen">
+                <h3 class="screen-title">Registrar Fichaje Manual</h3>
+                
+                <div class="employee-info-card">
+                    <h3>Seleccionar Empleado</h3>
+                    <div class="input-group">
+                        <div class="input-container">
+                            <i class="fas fa-user"></i>
+                            <select id="employee-select" class="select-input" onchange="onEmployeeSelect()">
+                                <option value="">Selecciona un empleado...</option>
+                                <!-- Las opciones se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="employee-details" style="display: none;">
+                        <div class="employee-details">
+                            <div class="detail-item">
+                                <div class="detail-label">DNI</div>
+                                <div class="detail-value" id="detail-dni">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Estado Actual</div>
+                                <div class="detail-value">
+                                    <span id="detail-status" class="status-badge">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Local</label>
+                    <div class="input-container">
+                        <i class="fas fa-store"></i>
+                        <select id="local-select" class="select-input">
+                            <option value="lacroze">LACROZE</option>
+                            <option value="palermo">PALERMO</option>
+                            <option value="saavedra">SAVEDRA</option>
+                            <option value="general">GENERAL</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Fecha y Hora de Entrada</label>
+                    <div class="datetime-grid">
+                        <input type="date" id="fecha-entrada" class="datetime-input" value="">
+                        <input type="time" id="hora-entrada" class="datetime-input" value="08:00">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Fecha y Hora de Salida (opcional)</label>
+                    <div class="datetime-grid">
+                        <input type="date" id="fecha-salida" class="datetime-input" value="">
+                        <input type="time" id="hora-salida" class="datetime-input" value="17:00">
+                    </div>
+                    <small style="color: var(--primary); display: block; margin-top: 5px;">
+                        Dejar en blanco si solo es entrada
+                    </small>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Motivo (opcional)</label>
+                    <div class="input-container">
+                        <i class="fas fa-sticky-note"></i>
+                        <input type="text" 
+                               id="motivo-input" 
+                               class="text-input" 
+                               placeholder="Ej: Fichaje olvidado, corrección, etc.">
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="action-btn" onclick="registerManualFichaje()" id="register-btn">
+                        <i class="fas fa-save"></i> REGISTRAR FICHAJE
+                    </button>
+                    <button class="action-btn secondary-btn" onclick="showScreen('screen-dashboard')">
+                        <i class="fas fa-arrow-left"></i> VOLVER
+                    </button>
+                </div>
+                
+                <div class="message" id="register-message"></div>
+            </div>
+            
+            <!-- SEARCH RECORDS SCREEN -->
+            <div id="screen-search" class="screen">
+                <h3 class="screen-title">Buscar Registros</h3>
+                
+                <div class="employee-info-card">
+                    <div class="input-group">
+                        <label class="input-label">Seleccionar Empleado</label>
+                        <div class="input-container">
+                            <i class="fas fa-user"></i>
+                            <select id="search-employee-select" class="select-input">
+                                <option value="">Todos los empleados</option>
+                                <!-- Las opciones se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="datetime-grid">
+                        <div>
+                            <label class="input-label">Fecha Inicio</label>
+                            <input type="date" id="fecha-inicio" class="datetime-input" value="">
+                        </div>
+                        <div>
+                            <label class="input-label">Fecha Fin</label>
+                            <input type="date" id="fecha-fin" class="datetime-input" value="">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="action-btn" onclick="searchRecords()" id="search-btn">
+                        <i class="fas fa-search"></i> BUSCAR REGISTROS
+                    </button>
+                    <button class="action-btn secondary-btn" onclick="showScreen('screen-dashboard')">
+                        <i class="fas fa-arrow-left"></i> VOLVER
+                    </button>
+                </div>
+                
+                <div id="search-results" style="display: none;">
+                    <h4 style="margin: 20px 0 10px; color: var(--dark);">Resultados de la búsqueda</h4>
+                    <div class="message info" id="results-summary">
+                        Cargando resultados...
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="records-table" id="records-table">
+                            <thead>
+                                <tr>
+                                    <th>Entrada</th>
+                                    <th>Salida</th>
+                                    <th>Local</th>
+                                    <th>Horas</th>
+                                    <th>Dispositivo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="records-body">
+                                <!-- Los registros se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="message" id="search-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURACIÓN
+        // ============================================
+        
+        // URL de tu Web App de Apps Script
+        // IMPORTANTE: Cambia esto por tu URL real
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQVKHBWJRI42wGyPEL5sy5w6NcVKGCVHWT6HqPSTq_pK4RmPb_hPjXRqwEeFQSBr8I/exec";
+        
+        // Estado de la sesión
+        let isLoggedIn = false;
+        let sessionToken = null;
+        let employeesList = [];
+        
+        // ============================================
+        // FUNCIONES DE UTILIDAD
+        // ============================================
+        
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+            
+            // Acciones específicas por pantalla
+            if (screenId === 'screen-dashboard') {
+                loadDashboardStats();
+            } else if (screenId === 'screen-register') {
+                loadEmployeesForSelect();
+                setDefaultDates();
+            } else if (screenId === 'screen-search') {
+                loadEmployeesForSearchSelect();
+            }
+        }
+        
+        function showMessage(elementId, text, type) {
+            const messageDiv = document.getElementById(elementId);
+            messageDiv.innerHTML = text;
+            messageDiv.className = `message ${type}`;
+        }
+        
+        function clearMessage(elementId) {
+            const messageDiv = document.getElementById(elementId);
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = '';
+        }
+        
+        function setLoading(buttonId, isLoading, defaultText = '') {
+            const button = document.getElementById(buttonId);
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESANDO...';
+            } else {
+                button.disabled = false;
+                button.innerHTML = defaultText;
+            }
+        }
+        
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha-entrada').value = today;
+            document.getElementById('fecha-salida').value = today;
+            document.getElementById('fecha-inicio').value = today;
+            document.getElementById('fecha-fin').value = today;
+        }
+        
+        // ============================================
+        // AUTENTICACIÓN
+        // ============================================
+        
+        function handleLoginKeypress(event) {
+            if (event.key === 'Enter') {
+                loginAdmin();
+            }
+        }
+        
+        async function loginAdmin() {
+            const password = document.getElementById('admin-password').value.trim();
+            
+            if (!password) {
+                showMessage('login-message', '❌ Ingresa la contraseña de administración', 'error');
+                return;
+            }
+            
+            setLoading('login-btn', true, '<i class="fas fa-sign-in-alt"></i> INGRESAR AL PANEL');
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'loginAdmin',
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isLoggedIn = true;
+                    sessionToken = Date.now().toString();
+                    
+                    // Mostrar información de sesión
+                    const now = new Date();
+                    document.getElementById('admin-session-info').textContent = 
+                        `Admin - ${now.toLocaleDateString('es-AR')}`;
+                    
+                    // Iniciar actualización de hora del servidor
+                    updateServerTime();
+                    setInterval(updateServerTime, 1000);
+                    
+                    showScreen('screen-dashboard');
+                    showMessage('login-message', '✅ Acceso concedido', 'success');
+                } else {
+                    showMessage('login-message', `❌ ${data.error || 'Contraseña incorrecta'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                showMessage('login-message', '❌ Error de conexión al servidor', 'error');
+            } finally {
+                setLoading('login-btn', false, '<i class="fas fa-sign-in-alt"></i> INGRESAR AL PANEL');
+            }
+        }
+        
+        function logoutAdmin() {
+            isLoggedIn = false;
+            sessionToken = null;
+            document.getElementById('admin-password').value = '';
+            showScreen('screen-login');
+            clearMessage('login-message');
+        }
+        
+        function updateServerTime() {
+            const now = new Date();
+            document.getElementById('server-time').textContent = 
+                now.toLocaleTimeString('es-AR');
+        }
+        
+        // ============================================
+        // DASHBOARD Y ESTADÍSTICAS
+        // ============================================
+        
+        async function loadDashboardStats() {
+            if (!isLoggedIn) return;
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'getEstadisticas'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayDashboardStats(data.estadisticas);
+                } else {
+                    console.error('Error al cargar estadísticas:', data.error);
+                }
+            } catch (error) {
+                console.error('Error de conexión:', error);
+            }
+        }
+        
+        function displayDashboardStats(stats) {
+            const statsGrid = document.getElementById('dashboard-stats');
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${stats.totalEmpleados || 0}</div>
+                    <div class="stat-label">EMPLEADOS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.empleadosConRegistros || 0}</div>
+                    <div class="stat-label">CON REGISTROS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.totalRegistros || 0}</div>
+                    <div class="stat-label">TOTAL FICHAJES</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.entradasPendientes || 0}</div>
+                    <div class="stat-label">PENDIENTES</div>
+                </div>
+            `;
+        }
+        
+        // ============================================
+        // GESTIÓN DE EMPLEADOS
+        // ============================================
+        
+        async function loadEmployeesForSelect() {
+            if (!isLoggedIn) return;
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'getEmpleados'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    employeesList = data.empleados || [];
+                    populateEmployeeSelect(employeesList, 'employee-select');
+                }
+            } catch (error) {
+                console.error('Error al cargar empleados:', error);
+            }
+        }
+        
+        function loadEmployeesForSearchSelect() {
+            populateEmployeeSelect(employeesList, 'search-employee-select', true);
+        }
+        
+        function populateEmployeeSelect(employees, selectId, includeAllOption = false) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            
+            if (includeAllOption) {
+                select.innerHTML = '<option value="">Todos los empleados</option>';
+            } else {
+                select.innerHTML = '<option value="">Selecciona un empleado...</option>';
+            }
+            
+            employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee.dni;
+                option.textContent = `${employee.nombre} (${employee.dni})`;
+                option.setAttribute('data-nombre', employee.nombre);
+                option.setAttribute('data-estado', employee.estado);
+                select.appendChild(option);
+            });
+        }
+        
+        function onEmployeeSelect() {
+            const select = document.getElementById('employee-select');
+            const dni = select.value;
+            const selectedOption = select.options[select.selectedIndex];
+            
+            const detailsDiv = document.getElementById('employee-details');
+            
+            if (dni && selectedOption.dataset.nombre) {
+                detailsDiv.style.display = 'block';
+                document.getElementById('detail-dni').textContent = dni;
+                
+                // Actualizar estado
+                const status = selectedOption.dataset.estado;
+                const statusBadge = document.getElementById('detail-status');
+                statusBadge.textContent = getStatusText(status);
+                statusBadge.className = `status-badge ${getStatusClass(status)}`;
+            } else {
+                detailsDiv.style.display = 'none';
+            }
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                'ENTRADA_PENDIENTE': 'ENTRADA PENDIENTE',
+                'JORNADA_COMPLETA': 'JORNADA COMPLETA',
+                'SIN_REGISTROS': 'SIN REGISTROS',
+                'NO_REGISTRADO': 'NO REGISTRADO',
+                'DESCONOCIDO': 'DESCONOCIDO',
+                'ERROR': 'ERROR'
+            };
+            return statusMap[status] || 'DESCONOCIDO';
+        }
+        
+        function getStatusClass(status) {
+            const classMap = {
+                'ENTRADA_PENDIENTE': 'status-pending',
+                'JORNADA_COMPLETA': 'status-complete',
+                'SIN_REGISTROS': 'status-pending',
+                'NO_REGISTRADO': 'status-pending',
+                'DESCONOCIDO': 'status-pending',
+                'ERROR': 'status-pending'
+            };
+            return classMap[status] || 'status-pending';
+        }
+        
+        // ============================================
+        // REGISTRO MANUAL DE FICHAJES
+        // ============================================
+        
+        async function registerManualFichaje() {
+            if (!isLoggedIn) {
+                showMessage('register-message', '❌ Sesión no válida. Vuelve a iniciar sesión.', 'error');
+                return;
+            }
+            
+            // Validar selección de empleado
+            const employeeSelect = document.getElementById('employee-select');
+            const dni = employeeSelect.value;
+            const nombreEmpleado = employeeSelect.options[employeeSelect.selectedIndex].dataset.nombre;
+            
+            if (!dni || !nombreEmpleado) {
+                showMessage('register-message', '❌ Selecciona un empleado válido', 'error');
+                return;
+            }
+            
+            // Validar fecha y hora de entrada
+            const fechaEntrada = document.getElementById('fecha-entrada').value;
+            const horaEntrada = document.getElementById('hora-entrada').value;
+            
+            if (!fechaEntrada || !horaEntrada) {
+                showMessage('register-message', '❌ Fecha y hora de entrada son requeridas', 'error');
+                return;
+            }
+            
+            // Validar que la entrada no sea en el futuro
+            const entradaDateTime = new Date(`${fechaEntrada}T${horaEntrada}`);
+            const ahora = new Date();
+            if (entradaDateTime > ahora) {
+                showMessage('register-message', '❌ La fecha/hora de entrada no puede ser en el futuro', 'error');
+                return;
+            }
+            
+            // Preparar datos
+            const datos = {
+                action: 'registrarFichaje',
+                dni: dni,
+                nombreEmpleado: nombreEmpleado,
+                fecha: fechaEntrada,
+                horaEntrada: horaEntrada,
+                horaSalida: document.getElementById('hora-salida').value,
+                local: document.getElementById('local-select').value,
+                motivo: document.getElementById('motivo-input').value.trim(),
+                adminNombre: 'Administrador'
+            };
+            
+            // Si hay salida, validar fecha de salida
+            const fechaSalida = document.getElementById('fecha-salida').value;
+            if (datos.horaSalida) {
+                if (!fechaSalida) {
+                    showMessage('register-message', '❌ Si ingresas hora de salida, también debes ingresar fecha', 'error');
+                    return;
+                }
+                
+                const salidaDateTime = new Date(`${fechaSalida}T${datos.horaSalida}`);
+                if (salidaDateTime > ahora) {
+                    showMessage('register-message', '❌ La fecha/hora de salida no puede ser en el futuro', 'error');
+                    return;
+                }
+                
+                datos.fechaSalida = fechaSalida;
+            }
+            
+            setLoading('register-btn', true, '<i class="fas fa-save"></i> REGISTRAR FICHAJE');
+            showMessage('register-message', 'Procesando registro manual...', 'loading');
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(datos)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('register-message', 
+                        `✅ ${data.message}<br><br>
+                         <strong>Detalles:</strong><br>
+                         • Empleado: ${data.detalles.empleado}<br>
+                         • Entrada: ${data.detalles.entrada}<br>
+                         • Salida: ${data.detalles.salida}<br>
+                         • Horas: ${data.detalles.horas}<br>
+                         • Local: ${data.detalles.local}`, 
+                        'success');
+                    
+                    // Limpiar formulario después de 5 segundos
+                    setTimeout(() => {
+                        clearMessage('register-message');
+                        setLoading('register-btn', false, '<i class="fas fa-save"></i> REGISTRAR FICHAJE');
+                    }, 5000);
+                    
+                } else {
+                    showMessage('register-message', `❌ ${data.error || 'Error al registrar el fichaje'}`, 'error');
+                    setLoading('register-btn', false, '<i class="fas fa-save"></i> REGISTRAR FICHAJE');
+                }
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                showMessage('register-message', '❌ Error de conexión al servidor', 'error');
+                setLoading('register-btn', false, '<i class="fas fa-save"></i> REGISTRAR FICHAJE');
+            }
+        }
+        
+        // ============================================
+        // BÚSQUEDA DE REGISTROS
+        // ============================================
+        
+        async function searchRecords() {
+            if (!isLoggedIn) {
+                showMessage('search-message', '❌ Sesión no válida. Vuelve a iniciar sesión.', 'error');
+                return;
+            }
+            
+            const dni = document.getElementById('search-employee-select').value;
+            const fechaInicio = document.getElementById('fecha-inicio').value;
+            const fechaFin = document.getElementById('fecha-fin').value;
+            
+            // Validar fechas
+            if (fechaInicio && fechaFin) {
+                const inicio = new Date(fechaInicio);
+                const fin = new Date(fechaFin);
+                
+                if (fin < inicio) {
+                    showMessage('search-message', '❌ La fecha fin no puede ser anterior a la fecha inicio', 'error');
+                    return;
+                }
+            }
+            
+            setLoading('search-btn', true, '<i class="fas fa-search"></i> BUSCAR REGISTROS');
+            showMessage('search-message', 'Buscando registros...', 'loading');
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'buscarRegistros',
+                        dni: dni || '',
+                        fechaInicio: fechaInicio || '',
+                        fechaFin: fechaFin || ''
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displaySearchResults(data);
+                    showMessage('search-message', `✅ ${data.totalRegistros || 0} registros encontrados`, 'success');
+                } else {
+                    showMessage('search-message', `❌ ${data.error || 'Error en la búsqueda'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                showMessage('search-message', '❌ Error de conexión al servidor', 'error');
+            } finally {
+                setLoading('search-btn', false, '<i class="fas fa-search"></i> BUSCAR REGISTROS');
+            }
+        }
+        
+        function displaySearchResults(data) {
+            const resultsDiv = document.getElementById('search-results');
+            const tableBody = document.getElementById('records-body');
+            const summaryDiv = document.getElementById('results-summary');
+            
+            resultsDiv.style.display = 'block';
+            
+            // Actualizar resumen
+            summaryDiv.innerHTML = `
+                <strong>Empleado:</strong> ${data.empleado || 'Todos'} (${data.dni || 'N/A'})<br>
+                <strong>Total registros:</strong> ${data.totalRegistros || 0}<br>
+                <strong>Búsqueda realizada:</strong> ${new Date().toLocaleString('es-AR')}
+            `;
+            
+            // Limpiar tabla
+            tableBody.innerHTML = '';
+            
+            // Mostrar registros
+            if (data.registros && data.registros.length > 0) {
+                data.registros.forEach(registro => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${registro.entrada || '-'}</td>
+                        <td>${registro.salida || '-'}</td>
+                        <td>${registro.local || '-'}</td>
+                        <td>${registro.horas || '0.00'}</td>
+                        <td>${registro.dispositivo || '-'}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="5" style="text-align: center; padding: 20px; color: var(--primary);">
+                        No se encontraron registros
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            }
+        }
+        
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Establecer fechas por defecto
+            setDefaultDates();
+            
+            // Configurar eventos de teclado
+            document.getElementById('admin-password').addEventListener('keypress', handleLoginKeypress);
+            
+            // Mostrar mensaje de bienvenida
+            setTimeout(() => {
+                if (document.getElementById('screen-login').classList.contains('active')) {
+                    showMessage('login-message', 
+                        'Ingresa la contraseña de administración para acceder al panel.', 
+                        'info');
+                }
+            }, 1000);
+        });
+        
+        // ============================================
+        // VALIDACIÓN DE SESIÓN (opcional)
+        // ============================================
+        
+        function checkSession() {
+            if (!isLoggedIn && !window.location.href.includes('login')) {
+                // Redirigir al login si la sesión expiró
+                showScreen('screen-login');
+            }
+        }
+        
+        // Verificar sesión periódicamente
+        setInterval(checkSession, 300000); // Cada 5 minutos
+    </script>
+</body>
+</html>
