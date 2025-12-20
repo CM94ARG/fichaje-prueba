@@ -948,11 +948,12 @@
                 // Llamar al backend
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      action: 'loginAdmin',
+                      password: password
+                    })
+                  })
                 
                 // Verificar respuesta HTTP
                 if (!response.ok) {
