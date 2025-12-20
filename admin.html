@@ -470,7 +470,7 @@
             margin-bottom: 5px;
         }
         
-        /* TABLE STYLES (for records) */
+        /* TABLE STYLES */
         .records-table {
             width: 100%;
             border-collapse: collapse;
@@ -584,11 +584,11 @@
                                    id="admin-password" 
                                    class="text-input" 
                                    placeholder="Ingresa la contraseña de administración"
-                                   onkeypress="handleLoginKeypress(event)">
+                                   onkeypress="if(event.key === 'Enter') loginAdmin()">
                         </div>
                     </div>
                     
-                    <button class="action-btn" onclick="loginAdmin()">
+                    <button class="action-btn" id="login-btn" onclick="loginAdmin()">
                         <i class="fas fa-sign-in-alt"></i> INGRESAR AL PANEL
                     </button>
                     
@@ -607,6 +607,22 @@
                 
                 <div id="dashboard-stats" class="stats-grid">
                     <!-- Las estadísticas se cargarán dinámicamente -->
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">EMPLEADOS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">CON REGISTROS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">TOTAL FICHAJES</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">PENDIENTES</div>
+                    </div>
                 </div>
                 
                 <div class="btn-group">
@@ -623,7 +639,7 @@
                 </button>
                 
                 <div class="footer">
-                    <p>Sesion iniciada como: <span id="admin-session-info">Administrador</span></p>
+                    <p>Sesión iniciada como: <span id="admin-session-info">Administrador</span></p>
                     <p>Hora del servidor: <span id="server-time">--:--:--</span></p>
                 </div>
             </div>
@@ -761,11 +777,11 @@
                         <table class="records-table" id="records-table">
                             <thead>
                                 <tr>
+                                    <th>Empleado</th>
                                     <th>Entrada</th>
                                     <th>Salida</th>
                                     <th>Local</th>
                                     <th>Horas</th>
-                                    <th>Dispositivo</th>
                                 </tr>
                             </thead>
                             <tbody id="records-body">
@@ -785,14 +801,13 @@
         // CONFIGURACIÓN
         // ============================================
         
-        // URL de tu Web App de Apps Script
-        // IMPORTANTE: Cambia esto por tu URL real
+        // IMPORTANTE: Cambia esto por tu URL real de Apps Script
+        // Obténla desde: Implementar > Implementaciones > Copiar URL
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQVKHBWJRI42wGyPEL5sy5w6NcVKGCVHWT6HqPSTq_pK4RmPb_hPjXRqwEeFQSBr8I/exec";
         
-        // Estado de la sesión
-        let isLoggedIn = false;
+        // Estado de sesión
         let sessionToken = null;
-        let employeesList = [];
+        let sessionExpires = null;
         
         // ============================================
         // FUNCIONES DE UTILIDAD
@@ -847,14 +862,126 @@
         }
         
         // ============================================
-        // AUTENTICACIÓN
+        // SISTEMA DE SESIONES SEGURO
         // ============================================
         
-        function handleLoginKeypress(event) {
-            if (event.key === 'Enter') {
-                loginAdmin();
+        function checkLocalSession() {
+            try {
+                const savedToken = localStorage.getItem('adminSessionToken');
+                const savedExpires = localStorage.getItem('adminSessionExpires');
+                
+                if (savedToken && savedExpires) {
+                    const now = Date.now();
+                    if (now < parseInt(savedExpires)) {
+                        // Sesión válida
+                        sessionToken = savedToken;
+                        sessionExpires = parseInt(savedExpires);
+                        return true;
+                    } else {
+                        // Sesión expirada
+                        clearLocalSession();
+                        return false;
+                    }
+                }
+                return false;
+            } catch (e) {
+                console.error('Error checking session:', e);
+                return false;
             }
         }
+        
+        function saveLocalSession(token, expires) {
+            try {
+                localStorage.setItem('adminSessionToken', token);
+                localStorage.setItem('adminSessionExpires', expires.toString());
+                sessionToken = token;
+                sessionExpires = expires;
+            } catch (e) {
+                console.error('Error saving session:', e);
+            }
+        }
+        
+        function clearLocalSession() {
+            try {
+                localStorage.removeItem('adminSessionToken');
+                localStorage.removeItem('adminSessionExpires');
+                sessionToken = null;
+                sessionExpires = null;
+            } catch (e) {
+                console.error('Error clearing session:', e);
+            }
+        }
+        
+        // ============================================
+        // FUNCIÓN PRINCIPAL PARA LLAMADAS AL BACKEND
+        // ============================================
+        
+        async function callAdminAPI(action, data = {}) {
+            try {
+                // Para login no necesitamos token
+                if (action !== 'loginAdmin') {
+                    // Verificar si tenemos sesión local
+                    if (!checkLocalSession()) {
+                        return {
+                            success: false,
+                            error: "Sesión expirada",
+                            requiereLogin: true
+                        };
+                    }
+                    
+                    // Agregar token de sesión a los datos
+                    data.sessionToken = sessionToken;
+                }
+                
+                // Agregar acción a los datos
+                data.action = action;
+                
+                // Obtener IP pública (opcional)
+                try {
+                    const ipResponse = await fetch('https://api.ipify.org?format=json');
+                    const ipData = await ipResponse.json();
+                    data.ip_publica = ipData.ip;
+                } catch (ipError) {
+                    data.ip_publica = "No detectada";
+                }
+                
+                // Llamar al backend
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                // Verificar respuesta HTTP
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Si el backend indica que se requiere login
+                if (result.requiereLogin) {
+                    clearLocalSession();
+                    showScreen('screen-login');
+                    showMessage('login-message', '🔒 Sesión expirada. Por favor, inicia sesión nuevamente.', 'info');
+                }
+                
+                return result;
+                
+            } catch (error) {
+                console.error('Error en callAdminAPI:', error);
+                return {
+                    success: false,
+                    error: "Error de conexión con el servidor. Verifica tu internet."
+                };
+            }
+        }
+        
+        // ============================================
+        // AUTENTICACIÓN
+        // ============================================
         
         async function loginAdmin() {
             const password = document.getElementById('admin-password').value.trim();
@@ -865,53 +992,62 @@
             }
             
             setLoading('login-btn', true, '<i class="fas fa-sign-in-alt"></i> INGRESAR AL PANEL');
+            showMessage('login-message', 'Verificando credenciales...', 'loading');
             
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'loginAdmin',
-                        password: password
-                    })
+                const result = await callAdminAPI('loginAdmin', {
+                    password: password
                 });
                 
-                const data = await response.json();
-                
-                if (data.success) {
-                    isLoggedIn = true;
-                    sessionToken = Date.now().toString();
+                if (result.success && result.sessionToken) {
+                    // Guardar sesión
+                    saveLocalSession(result.sessionToken, result.expires);
                     
-                    // Mostrar información de sesión
+                    // Actualizar UI
                     const now = new Date();
                     document.getElementById('admin-session-info').textContent = 
                         `Admin - ${now.toLocaleDateString('es-AR')}`;
                     
-                    // Iniciar actualización de hora del servidor
+                    // Iniciar actualización de hora
                     updateServerTime();
                     setInterval(updateServerTime, 1000);
                     
+                    // Ir al dashboard
                     showScreen('screen-dashboard');
                     showMessage('login-message', '✅ Acceso concedido', 'success');
+                    
+                    // Limpiar campo de contraseña
+                    document.getElementById('admin-password').value = '';
+                    
                 } else {
-                    showMessage('login-message', `❌ ${data.error || 'Contraseña incorrecta'}`, 'error');
+                    showMessage('login-message', `❌ ${result.error || 'Contraseña incorrecta'}`, 'error');
                 }
             } catch (error) {
-                console.error('Error de conexión:', error);
-                showMessage('login-message', '❌ Error de conexión al servidor', 'error');
+                showMessage('login-message', '❌ Error de conexión con el servidor', 'error');
             } finally {
                 setLoading('login-btn', false, '<i class="fas fa-sign-in-alt"></i> INGRESAR AL PANEL');
             }
         }
         
-        function logoutAdmin() {
-            isLoggedIn = false;
-            sessionToken = null;
-            document.getElementById('admin-password').value = '';
+        async function logoutAdmin() {
+            try {
+                // Notificar al backend que cerramos sesión
+                await callAdminAPI('cerrarSesion');
+            } catch (e) {
+                // Ignorar errores en logout
+            }
+            
+            // Limpiar sesión local
+            clearLocalSession();
+            
+            // Volver a login
             showScreen('screen-login');
             clearMessage('login-message');
+            
+            // Mostrar mensaje
+            setTimeout(() => {
+                showMessage('login-message', '✅ Sesión cerrada exitosamente', 'success');
+            }, 300);
         }
         
         function updateServerTime() {
@@ -925,28 +1061,16 @@
         // ============================================
         
         async function loadDashboardStats() {
-            if (!isLoggedIn) return;
-            
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'getEstadisticas'
-                    })
-                });
+                const result = await callAdminAPI('getEstadisticas');
                 
-                const data = await response.json();
-                
-                if (data.success) {
-                    displayDashboardStats(data.estadisticas);
-                } else {
-                    console.error('Error al cargar estadísticas:', data.error);
+                if (result.success) {
+                    displayDashboardStats(result.estadisticas);
+                } else if (!result.requiereLogin) {
+                    console.error('Error al cargar estadísticas:', result.error);
                 }
             } catch (error) {
-                console.error('Error de conexión:', error);
+                console.error('Error en loadDashboardStats:', error);
             }
         }
         
@@ -978,24 +1102,11 @@
         // ============================================
         
         async function loadEmployeesForSelect() {
-            if (!isLoggedIn) return;
-            
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'getEmpleados'
-                    })
-                });
+                const result = await callAdminAPI('getEmpleados');
                 
-                const data = await response.json();
-                
-                if (data.success) {
-                    employeesList = data.empleados || [];
-                    populateEmployeeSelect(employeesList, 'employee-select');
+                if (result.success) {
+                    populateEmployeeSelect(result.empleados, 'employee-select');
                 }
             } catch (error) {
                 console.error('Error al cargar empleados:', error);
@@ -1003,27 +1114,39 @@
         }
         
         function loadEmployeesForSearchSelect() {
-            populateEmployeeSelect(employeesList, 'search-employee-select', true);
+            // Reutilizamos la misma lista que ya cargamos
+            const select = document.getElementById('employee-select');
+            const searchSelect = document.getElementById('search-employee-select');
+            
+            if (select.options.length > 1) {
+                // Copiar opciones del select principal
+                searchSelect.innerHTML = '<option value="">Todos los empleados</option>';
+                
+                for (let i = 1; i < select.options.length; i++) {
+                    const option = select.options[i].cloneNode(true);
+                    searchSelect.appendChild(option);
+                }
+            }
         }
         
-        function populateEmployeeSelect(employees, selectId, includeAllOption = false) {
+        function populateEmployeeSelect(employees, selectId) {
             const select = document.getElementById(selectId);
+            
+            // Guardar opción por defecto
+            const defaultOption = select.options[0];
             select.innerHTML = '';
+            select.appendChild(defaultOption);
             
-            if (includeAllOption) {
-                select.innerHTML = '<option value="">Todos los empleados</option>';
-            } else {
-                select.innerHTML = '<option value="">Selecciona un empleado...</option>';
+            if (employees && employees.length > 0) {
+                employees.forEach(employee => {
+                    const option = document.createElement('option');
+                    option.value = employee.dni;
+                    option.textContent = `${employee.nombre} (${employee.dni})`;
+                    option.setAttribute('data-nombre', employee.nombre);
+                    option.setAttribute('data-estado', employee.estado);
+                    select.appendChild(option);
+                });
             }
-            
-            employees.forEach(employee => {
-                const option = document.createElement('option');
-                option.value = employee.dni;
-                option.textContent = `${employee.nombre} (${employee.dni})`;
-                option.setAttribute('data-nombre', employee.nombre);
-                option.setAttribute('data-estado', employee.estado);
-                select.appendChild(option);
-            });
         }
         
         function onEmployeeSelect() {
@@ -1076,15 +1199,11 @@
         // ============================================
         
         async function registerManualFichaje() {
-            if (!isLoggedIn) {
-                showMessage('register-message', '❌ Sesión no válida. Vuelve a iniciar sesión.', 'error');
-                return;
-            }
-            
             // Validar selección de empleado
             const employeeSelect = document.getElementById('employee-select');
             const dni = employeeSelect.value;
-            const nombreEmpleado = employeeSelect.options[employeeSelect.selectedIndex].dataset.nombre;
+            const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
+            const nombreEmpleado = selectedOption.dataset.nombre;
             
             if (!dni || !nombreEmpleado) {
                 showMessage('register-message', '❌ Selecciona un empleado válido', 'error');
@@ -1110,7 +1229,6 @@
             
             // Preparar datos
             const datos = {
-                action: 'registrarFichaje',
                 dni: dni,
                 nombreEmpleado: nombreEmpleado,
                 fecha: fechaEntrada,
@@ -1142,25 +1260,17 @@
             showMessage('register-message', 'Procesando registro manual...', 'loading');
             
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(datos)
-                });
+                const result = await callAdminAPI('registrarFichaje', datos);
                 
-                const data = await response.json();
-                
-                if (data.success) {
+                if (result.success) {
                     showMessage('register-message', 
-                        `✅ ${data.message}<br><br>
+                        `✅ ${result.message}<br><br>
                          <strong>Detalles:</strong><br>
-                         • Empleado: ${data.detalles.empleado}<br>
-                         • Entrada: ${data.detalles.entrada}<br>
-                         • Salida: ${data.detalles.salida}<br>
-                         • Horas: ${data.detalles.horas}<br>
-                         • Local: ${data.detalles.local}`, 
+                         • Empleado: ${result.detalles.empleado}<br>
+                         • Entrada: ${result.detalles.entrada}<br>
+                         • Salida: ${result.detalles.salida}<br>
+                         • Horas: ${result.detalles.horas}<br>
+                         • Local: ${result.detalles.local}`, 
                         'success');
                     
                     // Limpiar formulario después de 5 segundos
@@ -1170,12 +1280,12 @@
                     }, 5000);
                     
                 } else {
-                    showMessage('register-message', `❌ ${data.error || 'Error al registrar el fichaje'}`, 'error');
+                    showMessage('register-message', `❌ ${result.error || 'Error al registrar el fichaje'}`, 'error');
                     setLoading('register-btn', false, '<i class="fas fa-save"></i> REGISTRAR FICHAJE');
                 }
             } catch (error) {
-                console.error('Error de conexión:', error);
-                showMessage('register-message', '❌ Error de conexión al servidor', 'error');
+                console.error('Error en registerManualFichaje:', error);
+                showMessage('register-message', '❌ Error de conexión con el servidor', 'error');
                 setLoading('register-btn', false, '<i class="fas fa-save"></i> REGISTRAR FICHAJE');
             }
         }
@@ -1185,11 +1295,6 @@
         // ============================================
         
         async function searchRecords() {
-            if (!isLoggedIn) {
-                showMessage('search-message', '❌ Sesión no válida. Vuelve a iniciar sesión.', 'error');
-                return;
-            }
-            
             const dni = document.getElementById('search-employee-select').value;
             const fechaInicio = document.getElementById('fecha-inicio').value;
             const fechaFin = document.getElementById('fecha-fin').value;
@@ -1209,30 +1314,21 @@
             showMessage('search-message', 'Buscando registros...', 'loading');
             
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'buscarRegistros',
-                        dni: dni || '',
-                        fechaInicio: fechaInicio || '',
-                        fechaFin: fechaFin || ''
-                    })
+                const result = await callAdminAPI('buscarRegistros', {
+                    dni: dni || '',
+                    fechaInicio: fechaInicio || '',
+                    fechaFin: fechaFin || ''
                 });
                 
-                const data = await response.json();
-                
-                if (data.success) {
-                    displaySearchResults(data);
-                    showMessage('search-message', `✅ ${data.totalRegistros || 0} registros encontrados`, 'success');
+                if (result.success) {
+                    displaySearchResults(result);
+                    showMessage('search-message', `✅ ${result.totalRegistros || 0} registros encontrados`, 'success');
                 } else {
-                    showMessage('search-message', `❌ ${data.error || 'Error en la búsqueda'}`, 'error');
+                    showMessage('search-message', `❌ ${result.error || 'Error en la búsqueda'}`, 'error');
                 }
             } catch (error) {
-                console.error('Error de conexión:', error);
-                showMessage('search-message', '❌ Error de conexión al servidor', 'error');
+                console.error('Error en searchRecords:', error);
+                showMessage('search-message', '❌ Error de conexión con el servidor', 'error');
             } finally {
                 setLoading('search-btn', false, '<i class="fas fa-search"></i> BUSCAR REGISTROS');
             }
@@ -1260,11 +1356,11 @@
                 data.registros.forEach(registro => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
+                        <td>${registro.empleado || registro.dni || '-'}</td>
                         <td>${registro.entrada || '-'}</td>
                         <td>${registro.salida || '-'}</td>
                         <td>${registro.local || '-'}</td>
                         <td>${registro.horas || '0.00'}</td>
-                        <td>${registro.dispositivo || '-'}</td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -1287,32 +1383,51 @@
             // Establecer fechas por defecto
             setDefaultDates();
             
-            // Configurar eventos de teclado
-            document.getElementById('admin-password').addEventListener('keypress', handleLoginKeypress);
-            
-            // Mostrar mensaje de bienvenida
-            setTimeout(() => {
-                if (document.getElementById('screen-login').classList.contains('active')) {
+            // Verificar si hay sesión activa
+            if (checkLocalSession()) {
+                // Hay sesión activa, ir al dashboard
+                const now = new Date();
+                document.getElementById('admin-session-info').textContent = 
+                    `Admin - ${now.toLocaleDateString('es-AR')}`;
+                
+                updateServerTime();
+                setInterval(updateServerTime, 1000);
+                
+                showScreen('screen-dashboard');
+            } else {
+                // No hay sesión, mostrar login
+                showScreen('screen-login');
+                
+                // Mostrar mensaje de bienvenida
+                setTimeout(() => {
                     showMessage('login-message', 
-                        'Ingresa la contraseña de administración para acceder al panel.', 
+                        '🔐 Ingresa la contraseña de administración para acceder al panel.', 
                         'info');
+                }, 500);
+            }
+            
+            // Configurar evento Enter en campo de contraseña
+            document.getElementById('admin-password').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    loginAdmin();
                 }
-            }, 1000);
+            });
         });
         
         // ============================================
-        // VALIDACIÓN DE SESIÓN (opcional)
+        // VERIFICACIÓN PERIÓDICA DE SESIÓN
         // ============================================
         
-        function checkSession() {
-            if (!isLoggedIn && !window.location.href.includes('login')) {
-                // Redirigir al login si la sesión expiró
+        function checkSessionPeriodically() {
+            if (!checkLocalSession() && !document.getElementById('screen-login').classList.contains('active')) {
+                // Sesión expirada, volver a login
                 showScreen('screen-login');
+                showMessage('login-message', '🔒 Tu sesión ha expirado. Por favor, inicia sesión nuevamente.', 'info');
             }
         }
         
-        // Verificar sesión periódicamente
-        setInterval(checkSession, 300000); // Cada 5 minutos
+        // Verificar sesión cada minuto
+        setInterval(checkSessionPeriodically, 60000);
     </script>
 </body>
 </html>
