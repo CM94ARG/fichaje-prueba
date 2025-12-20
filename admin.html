@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Admin - Sistema de Fichaje</title>
     <style>
-                /* RESET Y ESTILOS BASE */
+        /* RESET Y ESTILOS BASE */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -385,7 +385,95 @@
 </head>
 <body>
     <div class="container">
-        <!-- ... TODO EL HTML ANTERIOR ... (no cambia) -->
+        <!-- HEADER -->
+        <div class="header">
+            <h1>🔒 Panel de Administración</h1>
+            <div class="subtitle">Sistema de Fichaje - Cierre Manual de Jornadas</div>
+            <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        </div>
+        
+        <!-- SECCIÓN DE LOGIN -->
+        <div class="login-section" id="loginSection">
+            <h2>Acceso Restringido</h2>
+            <div class="input-group">
+                <label for="password">Contraseña de Administrador</label>
+                <input type="password" id="password" placeholder="Ingrese la contraseña" autocomplete="off">
+            </div>
+            <button class="btn" onclick="login()" id="loginBtn">Ingresar</button>
+            <div class="alert error" id="loginError" style="display: none;"></div>
+        </div>
+        
+        <!-- SECCIÓN DE ADMIN -->
+        <div class="admin-section" id="adminSection">
+            <!-- MENSAJES -->
+            <div class="alert success" id="successAlert" style="display: none;"></div>
+            <div class="alert error" id="errorAlert" style="display: none;"></div>
+            <div class="alert warning" id="warningAlert" style="display: none;"></div>
+            
+            <!-- LOADING -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Cargando datos...</p>
+            </div>
+            
+            <!-- LISTA DE EMPLEADOS -->
+            <h2 style="margin-bottom: 20px; color: #1a237e;">Seleccione un Empleado</h2>
+            <div class="empleados-container" id="empleadosContainer">
+                <!-- Los empleados se cargarán aquí dinámicamente -->
+            </div>
+            
+            <!-- FORMULARIO DE CIERRE MANUAL -->
+            <div class="cierre-form" id="cierreForm" style="display: none;">
+                <h3>📝 Cierre Manual de Jornada</h3>
+                <div id="empleadoSeleccionado" style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e1e1e1;">
+                    <!-- Info del empleado seleccionado -->
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="fechaEntrada">Fecha de Entrada</label>
+                        <input type="date" id="fechaEntrada" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="horaEntrada">Hora de Entrada</label>
+                        <input type="time" id="horaEntrada" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fechaSalida">Fecha de Salida</label>
+                        <input type="date" id="fechaSalida" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="horaSalida">Hora de Salida</label>
+                        <input type="time" id="horaSalida" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="local">Local</label>
+                        <select id="local" required>
+                            <option value="">Seleccione un local</option>
+                            <option value="lacroze">Lacroze</option>
+                            <option value="palermo">Palermo</option>
+                            <option value="saavedra">Saavedra</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn" onclick="registrarCierreManual()" id="registrarBtn">
+                        Registrar Cierre Manual
+                    </button>
+                    <button class="btn" onclick="cancelarCierre()" style="background: #666; margin-top: 10px;">
+                        Cancelar
+                    </button>
+                </div>
+                
+                <div class="auditoria-info" id="auditoriaInfo" style="margin-top: 25px; display: none;">
+                    <strong>📋 Información de Auditoría:</strong>
+                    <div>Fecha y hora del cierre: <span id="fechaCierre"></span></div>
+                    <div>Realizado por: Administrador</div>
+                    <div>Horas calculadas: <span id="horasCalculadas"></span></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -444,8 +532,64 @@
             }
         }
         
+        function logout() {
+            empleadoSeleccionado = null;
+            
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('adminSection').style.display = 'none';
+            document.getElementById('cierreForm').style.display = 'none';
+            document.querySelector('.logout-btn').style.display = 'none';
+            document.getElementById('empleadosContainer').innerHTML = '';
+            
+            // Limpiar formulario
+            const inputs = document.querySelectorAll('#cierreForm input, #cierreForm select');
+            inputs.forEach(input => {
+                if (input.type !== 'button') {
+                    input.value = '';
+                }
+            });
+        }
+        
         // ============================================
-        // FUNCIONES DE EMPLEADOS - ¡MODIFICADO PARA USAR FormData!
+        // FUNCIONES DE INTERFAZ
+        // ============================================
+        
+        function showAdminPanel() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('adminSection').style.display = 'block';
+            document.querySelector('.logout-btn').style.display = 'block';
+        }
+        
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+        
+        function showSuccess(message) {
+            const alert = document.getElementById('successAlert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+        
+        function showError(element, message) {
+            if (typeof element === 'string') {
+                element = document.getElementById(element);
+            }
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+        
+        function clearAlerts() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.display = 'none';
+            });
+        }
+        
+        // ============================================
+        // FUNCIONES DE EMPLEADOS
         // ============================================
         
         async function cargarEmpleados() {
@@ -466,7 +610,7 @@
                 if (data.success) {
                     renderEmpleados(data.empleados);
                 } else {
-                    showError('errorAlert', 'Error al cargar empleados');
+                    showError('errorAlert', 'Error al cargar empleados: ' + (data.error || 'Desconocido'));
                 }
             } catch (error) {
                 showError('errorAlert', 'Error de conexión al cargar empleados');
@@ -493,6 +637,62 @@
                 
                 container.appendChild(card);
             });
+        }
+        
+        function seleccionarEmpleado(empleado) {
+            // Deseleccionar todos
+            document.querySelectorAll('.empleado-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Seleccionar el nuevo
+            event.currentTarget.classList.add('selected');
+            empleadoSeleccionado = empleado;
+            
+            // Mostrar formulario
+            mostrarFormularioCierre();
+        }
+        
+        // ============================================
+        // FORMULARIO DE CIERRE MANUAL
+        // ============================================
+        
+        function mostrarFormularioCierre() {
+            if (!empleadoSeleccionado) return;
+            
+            // Actualizar info del empleado
+            document.getElementById('empleadoSeleccionado').innerHTML = `
+                <strong>Empleado:</strong> ${empleadoSeleccionado.nombre}<br>
+                <strong>DNI:</strong> ${empleadoSeleccionado.dni}
+            `;
+            
+            // Establecer fechas por defecto (hoy)
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fechaEntrada').value = hoy;
+            document.getElementById('fechaSalida').value = hoy;
+            
+            // Establecer horas por defecto
+            document.getElementById('horaEntrada').value = '08:00';
+            document.getElementById('horaSalida').value = '17:00';
+            
+            // Mostrar formulario
+            document.getElementById('cierreForm').style.display = 'block';
+            document.getElementById('auditoriaInfo').style.display = 'none';
+            
+            // Scroll al formulario
+            document.getElementById('cierreForm').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function cancelarCierre() {
+            empleadoSeleccionado = null;
+            document.getElementById('cierreForm').style.display = 'none';
+            
+            // Deseleccionar todos los empleados
+            document.querySelectorAll('.empleado-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            clearAlerts();
         }
         
         // ============================================
@@ -550,7 +750,7 @@
                     // Resetear después de 3 segundos
                     setTimeout(() => {
                         cancelarCierre();
-                        cargarEmpleados();
+                        cargarEmpleados(); // Recargar lista por si hay cambios
                     }, 3000);
                 } else {
                     showError('errorAlert', data.error || 'Error desconocido');
@@ -565,114 +765,6 @@
         }
         
         // ============================================
-        // FUNCIONES AUXILIARES (iguales)
-        // ============================================
-        
-        function logout() {
-            empleadoSeleccionado = null;
-            
-            document.getElementById('loginSection').style.display = 'block';
-            document.getElementById('adminSection').style.display = 'none';
-            document.getElementById('cierreForm').style.display = 'none';
-            document.querySelector('.logout-btn').style.display = 'none';
-            document.getElementById('empleadosContainer').innerHTML = '';
-            
-            // Limpiar formulario
-            const inputs = document.querySelectorAll('#cierreForm input, #cierreForm select');
-            inputs.forEach(input => {
-                if (input.type !== 'button') {
-                    input.value = '';
-                }
-            });
-        }
-        
-        function showAdminPanel() {
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('adminSection').style.display = 'block';
-            document.querySelector('.logout-btn').style.display = 'block';
-        }
-        
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-        }
-        
-        function showSuccess(message) {
-            const alert = document.getElementById('successAlert');
-            alert.textContent = message;
-            alert.style.display = 'block';
-            setTimeout(() => {
-                alert.style.display = 'none';
-            }, 5000);
-        }
-        
-        function showError(element, message) {
-            if (typeof element === 'string') {
-                element = document.getElementById(element);
-            }
-            element.textContent = message;
-            element.style.display = 'block';
-        }
-        
-        function clearAlerts() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                alert.style.display = 'none';
-            });
-        }
-        
-        function seleccionarEmpleado(empleado) {
-            // Deseleccionar todos
-            document.querySelectorAll('.empleado-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            // Seleccionar el nuevo
-            event.currentTarget.classList.add('selected');
-            empleadoSeleccionado = empleado;
-            
-            // Mostrar formulario
-            mostrarFormularioCierre();
-        }
-        
-        function mostrarFormularioCierre() {
-            if (!empleadoSeleccionado) return;
-            
-            // Actualizar info del empleado
-            document.getElementById('empleadoSeleccionado').innerHTML = `
-                <strong>Empleado:</strong> ${empleadoSeleccionado.nombre}<br>
-                <strong>DNI:</strong> ${empleadoSeleccionado.dni}
-            `;
-            
-            // Establecer fechas por defecto (hoy)
-            const hoy = new Date().toISOString().split('T')[0];
-            document.getElementById('fechaEntrada').value = hoy;
-            document.getElementById('fechaSalida').value = hoy;
-            
-            // Establecer horas por defecto
-            document.getElementById('horaEntrada').value = '08:00';
-            document.getElementById('horaSalida').value = '17:00';
-            
-            // Mostrar formulario
-            document.getElementById('cierreForm').style.display = 'block';
-            document.getElementById('auditoriaInfo').style.display = 'none';
-            
-            // Scroll al formulario
-            document.getElementById('cierreForm').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function cancelarCierre() {
-            empleadoSeleccionado = null;
-            document.getElementById('cierreForm').style.display = 'none';
-            
-            // Deseleccionar todos los empleados
-            document.querySelectorAll('.empleado-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            clearAlerts();
-        }
-        
-        // ============================================
         // EVENT LISTENERS Y INICIALIZACIÓN
         // ============================================
         
@@ -683,7 +775,31 @@
                     login();
                 }
             });
+            
+            // Validación en tiempo real de horas
+            document.getElementById('horaEntrada').addEventListener('change', validarHoras);
+            document.getElementById('horaSalida').addEventListener('change', validarHoras);
+            document.getElementById('fechaEntrada').addEventListener('change', validarHoras);
+            document.getElementById('fechaSalida').addEventListener('change', validarHoras);
         });
+        
+        function validarHoras() {
+            const fechaEntrada = document.getElementById('fechaEntrada').value;
+            const horaEntrada = document.getElementById('horaEntrada').value;
+            const fechaSalida = document.getElementById('fechaSalida').value;
+            const horaSalida = document.getElementById('horaSalida').value;
+            
+            if (!fechaEntrada || !horaEntrada || !fechaSalida || !horaSalida) return;
+            
+            const entrada = new Date(`${fechaEntrada}T${horaEntrada}`);
+            const salida = new Date(`${fechaSalida}T${horaSalida}`);
+            
+            if (salida < entrada) {
+                showError('warningAlert', '⚠️ La salida es anterior a la entrada. Se ajustará al día siguiente.');
+            } else {
+                document.getElementById('warningAlert').style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
