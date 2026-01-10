@@ -433,6 +433,82 @@
         .auditoria-info div {
             margin-bottom: 4px;
         }
+        
+        /* ESTILOS PARA TABLA DE REGISTROS */
+        .registros-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .registros-table th {
+            background-color: #f5f5f5;
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            color: #1a237e;
+            font-weight: 600;
+        }
+        
+        .registros-table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .registros-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .tipo-entrada {
+            background-color: #e8f5e9;
+        }
+        
+        .tipo-salida {
+            background-color: #fff3e0;
+        }
+        
+        .registros-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: white;
+        }
+        
+        .filtros-registros {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .filtros-registros select,
+        .filtros-registros input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-refresh {
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-refresh:hover {
+            background: #283593;
+        }
     </style>
 </head>
 <body>
@@ -478,7 +554,7 @@
             <div class="accion-form" id="accionForm" style="display: none;">
                 <h3>📝 Registro Manual</h3>
                 <div id="empleadoSeleccionado" style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e1e1e1;">
-                    <!-- Info del empleado seleccionado -->
+                    <!-- Info del empleado seleccionado y registros -->
                 </div>
                 
                 <!-- BOTONES DE ACCIÓN -->
@@ -524,6 +600,7 @@
         // Variables globales
         let empleadoSeleccionado = null;
         let accionSeleccionada = null; // 'entrada' o 'salida'
+        let registrosEmpleado = [];
         
         // ============================================
         // FUNCIONES DE LOGIN
@@ -574,6 +651,7 @@
         function logout() {
             empleadoSeleccionado = null;
             accionSeleccionada = null;
+            registrosEmpleado = [];
             
             document.getElementById('loginSection').style.display = 'block';
             document.getElementById('adminSection').style.display = 'none';
@@ -672,7 +750,125 @@
             });
         }
         
-        function seleccionarEmpleado(empleado) {
+        // ============================================
+        // FUNCIÓN PARA OBTENER REGISTROS DEL MES
+        // ============================================
+        
+        async function obtenerRegistrosMes(dni) {
+            try {
+                const formData = new FormData();
+                formData.append('action', 'getRegistrosEmpleado');
+                formData.append('dni', dni);
+                
+                // Obtener mes y año actual
+                const hoy = new Date();
+                const mesActual = hoy.getMonth() + 1; // 1-12
+                const añoActual = hoy.getFullYear();
+                
+                // Opcional: podrías enviar estos parámetros al backend si lo soporta
+                // formData.append('mes', mesActual);
+                // formData.append('año', añoActual);
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.registros) {
+                    // Filtrar por mes actual
+                    const registrosMes = data.registros.filter(registro => {
+                        const fechaRegistro = new Date(registro.fecha);
+                        return fechaRegistro.getMonth() + 1 === mesActual && 
+                               fechaRegistro.getFullYear() === añoActual;
+                    });
+                    
+                    // Ordenar por fecha descendente (más recientes primero)
+                    registrosMes.sort((a, b) => {
+                        const fechaA = new Date(a.fecha + ' ' + a.hora);
+                        const fechaB = new Date(b.fecha + ' ' + b.hora);
+                        return fechaB - fechaA;
+                    });
+                    
+                    return registrosMes;
+                } else {
+                    console.error('Error al obtener registros:', data.error);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Error en obtenerRegistrosMes:', error);
+                return [];
+            }
+        }
+        
+        // ============================================
+        // FUNCIÓN PARA MOSTRAR REGISTROS
+        // ============================================
+        
+        function mostrarRegistrosEmpleado(registros) {
+            if (!registros || registros.length === 0) {
+                return `
+                    <div style="margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px dashed #ddd;">
+                        <p style="margin: 0; color: #666; text-align: center;">
+                            <em>No hay registros para este empleado en el mes actual</em>
+                        </p>
+                    </div>
+                `;
+            }
+            
+            let html = `
+                <div class="filtros-registros">
+                    <strong style="color: #1a237e;">📋 Registros del mes actual:</strong>
+                    <span style="margin-left: auto; font-size: 0.9rem; color: #666;">
+                        ${registros.length} registro(s)
+                    </span>
+                </div>
+                <div class="registros-container">
+                    <table class="registros-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Local</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            registros.forEach(registro => {
+                const tipoClase = registro.tipo === 'entrada' ? 'tipo-entrada' : 'tipo-salida';
+                const tipoIcono = registro.tipo === 'entrada' ? '📥' : '📤';
+                const tipoTexto = registro.tipo === 'entrada' ? 'Entrada' : 'Salida';
+                
+                html += `
+                    <tr class="${tipoClase}">
+                        <td>${registro.fecha}</td>
+                        <td>${registro.hora}</td>
+                        <td>${tipoIcono} ${tipoTexto}</td>
+                        <td>${registro.local}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.8rem; color: #666; text-align: right;">
+                    <em>Mostrando registros del mes en curso</em>
+                </div>
+            `;
+            
+            return html;
+        }
+        
+        // ============================================
+        // FUNCIÓN ACTUALIZADA PARA SELECCIONAR EMPLEADO
+        // ============================================
+        
+        async function seleccionarEmpleado(empleado) {
             // Deseleccionar todos
             document.querySelectorAll('.empleado-card').forEach(card => {
                 card.classList.remove('selected');
@@ -683,12 +879,80 @@
             empleadoSeleccionado = empleado;
             accionSeleccionada = null;
             
-            // Mostrar formulario
-            mostrarFormularioAccion();
+            // Mostrar formulario y cargar registros
+            await mostrarFormularioAccion();
         }
         
         // ============================================
-        // FUNCIONES DE ACCIÓN
+        // FUNCIÓN ACTUALIZADA PARA MOSTRAR FORMULARIO
+        // ============================================
+        
+        async function mostrarFormularioAccion() {
+            if (!empleadoSeleccionado) return;
+            
+            // Obtener registros del mes
+            showLoading(true);
+            registrosEmpleado = await obtenerRegistrosMes(empleadoSeleccionado.dni);
+            showLoading(false);
+            
+            // Crear HTML con información del empleado y registros
+            const registrosHTML = mostrarRegistrosEmpleado(registrosEmpleado);
+            
+            // Actualizar info del empleado
+            document.getElementById('empleadoSeleccionado').innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div>
+                        <strong style="color: #1a237e; font-size: 1.1rem;">${empleadoSeleccionado.nombre}</strong><br>
+                        <span style="font-size: 0.9rem; color: #666;">DNI: ${empleadoSeleccionado.dni}</span>
+                    </div>
+                    <button class="btn-refresh" onclick="actualizarRegistros()" title="Actualizar registros">
+                        🔄 Actualizar
+                    </button>
+                </div>
+                ${registrosHTML}
+            `;
+            
+            // Resetear acción seleccionada
+            accionSeleccionada = null;
+            document.querySelectorAll('.accion-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Limpiar formulario
+            document.getElementById('formularioDinamico').innerHTML = '';
+            document.getElementById('auditoriaInfo').style.display = 'none';
+            
+            // Mostrar formulario
+            document.getElementById('accionForm').style.display = 'block';
+            
+            // Scroll al formulario
+            document.getElementById('accionForm').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // ============================================
+        // FUNCIÓN PARA ACTUALIZAR REGISTROS
+        // ============================================
+        
+        async function actualizarRegistros() {
+            if (!empleadoSeleccionado) return;
+            
+            showLoading(true);
+            registrosEmpleado = await obtenerRegistrosMes(empleadoSeleccionado.dni);
+            showLoading(false);
+            
+            // Actualizar la sección de registros
+            const registrosHTML = mostrarRegistrosEmpleado(registrosEmpleado);
+            
+            // Reemplazar solo la parte de registros
+            const empleadoSeleccionadoDiv = document.getElementById('empleadoSeleccionado');
+            const primeraParte = empleadoSeleccionadoDiv.innerHTML.split('</div>')[0] + '</div>';
+            empleadoSeleccionadoDiv.innerHTML = primeraParte + registrosHTML;
+            
+            showSuccess('Registros actualizados correctamente');
+        }
+        
+        // ============================================
+        // FUNCIONES DE ACCIÓN (sin cambios)
         // ============================================
         
         function seleccionarAccion(tipo) {
@@ -776,35 +1040,10 @@
             }
         }
         
-        function mostrarFormularioAccion() {
-            if (!empleadoSeleccionado) return;
-            
-            // Actualizar info del empleado
-            document.getElementById('empleadoSeleccionado').innerHTML = `
-                <strong>Empleado:</strong> ${empleadoSeleccionado.nombre}<br>
-                <strong>DNI:</strong> ${empleadoSeleccionado.dni}
-            `;
-            
-            // Resetear acción seleccionada
-            accionSeleccionada = null;
-            document.querySelectorAll('.accion-btn').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            
-            // Limpiar formulario
-            document.getElementById('formularioDinamico').innerHTML = '';
-            document.getElementById('auditoriaInfo').style.display = 'none';
-            
-            // Mostrar formulario
-            document.getElementById('accionForm').style.display = 'block';
-            
-            // Scroll al formulario
-            document.getElementById('accionForm').scrollIntoView({ behavior: 'smooth' });
-        }
-        
         function cancelarAccion() {
             empleadoSeleccionado = null;
             accionSeleccionada = null;
+            registrosEmpleado = [];
             document.getElementById('accionForm').style.display = 'none';
             
             // Deseleccionar todos los empleados
@@ -872,10 +1111,20 @@
                     document.getElementById('tipoAccion').textContent = accionSeleccionada === 'entrada' ? 'Entrada' : 'Salida';
                     document.getElementById('auditoriaInfo').style.display = 'block';
                     
-                    // Resetear después de 3 segundos
+                    // Actualizar registros después de 1 segundo
                     setTimeout(() => {
-                        cancelarAccion();
-                        cargarEmpleados();
+                        actualizarRegistros();
+                    }, 1000);
+                    
+                    // Resetear formulario después de 3 segundos
+                    setTimeout(() => {
+                        // Solo resetea el formulario, mantiene los registros visibles
+                        accionSeleccionada = null;
+                        document.querySelectorAll('.accion-btn').forEach(btn => {
+                            btn.classList.remove('selected');
+                        });
+                        document.getElementById('formularioDinamico').innerHTML = '';
+                        document.getElementById('auditoriaInfo').style.display = 'none';
                     }, 3000);
                 } else {
                     showError('errorAlert', data.error || 'Error desconocido');
@@ -900,6 +1149,10 @@
                     login();
                 }
             });
+            
+            // Set fecha por defecto en inputs date
+            const hoy = new Date().toISOString().split('T')[0];
+            // Esto se manejará en setDefaultValues cuando se seleccione una acción
         });
     </script>
 </body>
